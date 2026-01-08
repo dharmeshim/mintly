@@ -1,18 +1,27 @@
 package com.mintly.app.ui.screens
 
 import android.view.HapticFeedbackConstants
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.mintly.app.data.model.Category
 import com.mintly.app.viewmodel.MintlyViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun AddExpenseScreen(viewModel: MintlyViewModel) {
@@ -98,10 +107,10 @@ fun AddExpenseScreen(viewModel: MintlyViewModel) {
                     textStyle = MaterialTheme.typography.displayLarge.copy(textAlign = TextAlign.Center),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                        unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -110,7 +119,6 @@ fun AddExpenseScreen(viewModel: MintlyViewModel) {
 
                 // Category Indicator
                 Row(
-                    background = androidx.compose.ui.graphics.Color.Transparent,
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .clickable { /* Future: Category selection */ }
@@ -118,9 +126,9 @@ fun AddExpenseScreen(viewModel: MintlyViewModel) {
                 ) {
                     Box(
                         modifier = Modifier.size(8.dp)
-                            .androidx.compose.foundation.background(
-                                color = selectedCategory?.let { androidx.compose.ui.graphics.Color(it.colorDot) } ?: androidx.compose.ui.graphics.Color.Gray,
-                                shape = androidx.compose.foundation.shape.CircleShape
+                            .background(
+                                color = selectedCategory?.let { Color(it.colorDot) } ?: Color.Gray,
+                                shape = CircleShape
                             )
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -141,8 +149,8 @@ fun AddExpenseScreen(viewModel: MintlyViewModel) {
                     textStyle = MaterialTheme.typography.bodyLarge,
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
-                        focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -182,9 +190,9 @@ fun AddExpenseScreen(viewModel: MintlyViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(64.dp)
-                        .androidx.compose.ui.draw.alpha(if (isValid) 1f else 0.4f),
+                        .alpha(if (isValid) 1f else 0.4f),
                     enabled = isValid,
-                    shape = androidx.compose.foundation.shape.RoundedCornerShape(32.dp),
+                    shape = RoundedCornerShape(32.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.tertiary,
                         contentColor = MaterialTheme.colorScheme.onTertiary,

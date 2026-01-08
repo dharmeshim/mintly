@@ -7,8 +7,10 @@ import com.mintly.app.data.model.Category
 import com.mintly.app.data.model.Expense
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class MintlyViewModel(private val repository: MintlyRepository) : ViewModel() {
 
