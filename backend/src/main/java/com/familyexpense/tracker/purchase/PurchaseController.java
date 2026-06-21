@@ -23,11 +23,10 @@ public class PurchaseController {
     public ResponseEntity<List<Purchase>> getPurchases(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Long itemId,
             @RequestParam(required = false) Long profileId
     ) {
-        List<Purchase> purchases = purchaseService.getPurchases(startDate, endDate, categoryId, itemId, profileId);
+        List<Purchase> purchases = purchaseService.getPurchases(startDate, endDate, itemId, profileId);
         return ResponseEntity.ok(purchases);
     }
 
@@ -37,6 +36,15 @@ public class PurchaseController {
             @Valid @RequestBody CreatePurchaseRequest request
     ) {
         Purchase purchase = purchaseService.createPurchase(profileId, request);
+        return ResponseEntity.ok(purchase);
+    }
+
+    @GetMapping("/items/{itemId}/last")
+    public ResponseEntity<Purchase> getLastPurchaseByItemId(@PathVariable Long itemId) {
+        Purchase purchase = purchaseService.getLastPurchaseByItemId(itemId);
+        if (purchase == null) {
+            return ResponseEntity.notFound().build();
+        }
         return ResponseEntity.ok(purchase);
     }
 

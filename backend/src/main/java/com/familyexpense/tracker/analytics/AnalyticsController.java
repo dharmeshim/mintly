@@ -25,14 +25,24 @@ public class AnalyticsController {
         return ResponseEntity.ok(analyticsService.getBuyingInterval(itemId));
     }
 
-    @GetMapping("/category-spend")
-    public ResponseEntity<List<CategorySpendDto>> getCategorySpend(@RequestParam(required = false) String month) {
-        return ResponseEntity.ok(analyticsService.getCategorySpend(month));
+    @GetMapping("/item-spend")
+    public ResponseEntity<List<ItemSpendDto>> getItemSpend(@RequestParam(required = false) String period) {
+        return ResponseEntity.ok(analyticsService.getItemSpend(period));
+    }
+
+    @GetMapping("/person-spend")
+    public ResponseEntity<List<PersonSpendDto>> getPersonSpend(@RequestParam(required = false) String period) {
+        return ResponseEntity.ok(analyticsService.getPersonSpend(period));
+    }
+
+    @GetMapping("/price-changes")
+    public ResponseEntity<List<PriceChangeDto>> getPriceChanges(@RequestParam(required = false) String period) {
+        return ResponseEntity.ok(analyticsService.getPriceChanges(period));
     }
 
     @GetMapping("/cost-per-head")
-    public ResponseEntity<CostPerHeadDto> getCostPerHead(@RequestParam(required = false) String month) {
-        return ResponseEntity.ok(analyticsService.getCostPerHead(month));
+    public ResponseEntity<CostPerHeadDto> getCostPerHead(@RequestParam(required = false) String period) {
+        return ResponseEntity.ok(analyticsService.getCostPerHead(period));
     }
 
     @GetMapping("/dashboard")

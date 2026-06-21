@@ -1,12 +1,12 @@
 package com.familyexpense.tracker.item;
 
-import com.familyexpense.tracker.category.Category;
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "item", uniqueConstraints = {
-    @UniqueConstraint(name = "uq_item_name_category", columnNames = {"name", "category_id"})
+    @UniqueConstraint(name = "uq_item_name", columnNames = {"name"})
 })
 public class Item {
 
@@ -14,12 +14,8 @@ public class Item {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
-
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
 
     @Column(nullable = false)
     private String unit;
@@ -29,9 +25,8 @@ public class Item {
 
     public Item() {}
 
-    public Item(String name, Category category, String unit) {
+    public Item(String name, String unit) {
         this.name = name;
-        this.category = category;
         this.unit = unit;
         this.createdAt = LocalDateTime.now();
     }
@@ -50,14 +45,6 @@ public class Item {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public Category getCategory() {
-        return category;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
     }
 
     public String getUnit() {

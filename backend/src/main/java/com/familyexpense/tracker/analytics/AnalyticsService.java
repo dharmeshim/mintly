@@ -1,7 +1,8 @@
 package com.familyexpense.tracker.analytics;
 
-import com.familyexpense.tracker.category.Category;
+import com.familyexpense.tracker.item.Item;
 import com.familyexpense.tracker.item.ItemService;
+import com.familyexpense.tracker.profile.Profile;
 import com.familyexpense.tracker.profile.ProfileRepository;
 import com.familyexpense.tracker.purchase.Purchase;
 import com.familyexpense.tracker.purchase.PurchaseRepository;
@@ -90,36 +91,86 @@ public class AnalyticsService {
         return new BuyingIntervalDto(intervals, averageIntervalDays);
     }
 
-    public List<CategorySpendDto> getCategorySpend(String monthStr) {
-        YearMonth ym = parseYearMonth(monthStr);
-        LocalDate start = ym.atDay(1);
-        LocalDate end = ym.atEndOfMonth();
+    public List<ItemSpendDto> getItemSpend(String periodStr) {
+        LocalDate[] range = parsePeriod(periodStr);
+        List<Purchase> purchases = purchaseRepository.findWithFilters(range[0], range[1], null, null);
 
-        List<Purchase> purchases = purchaseRepository.findWithFilters(start, end, null, null, null);
-
-        Map<Category, BigDecimal> spendMap = purchases.stream()
+        Map<String, BigDecimal> spendMap = purchases.stream()
                 .collect(Collectors.groupingBy(
-                        p -> p.getItem().getCategory(),
+                        p -> p.getItem().getName(),
                         Collectors.reducing(BigDecimal.ZERO, Purchase::getTotalAmount, BigDecimal::add)
                 ));
 
         return spendMap.entrySet().stream()
-                .map(e -> new CategorySpendDto(
-                        e.getKey().getId(),
-                        e.getKey().getName(),
-                        e.getKey().getColor(),
+                .map(e -> new ItemSpendDto(
+                        e.getKey(),
                         e.getValue()
                 ))
-                .sorted(Comparator.comparing(CategorySpendDto::totalAmount).reversed())
+                .sorted(Comparator.comparing(ItemSpendDto::getTotalAmount).reversed())
                 .collect(Collectors.toList());
     }
 
-    public CostPerHeadDto getCostPerHead(String monthStr) {
-        YearMonth ym = parseYearMonth(monthStr);
-        LocalDate start = ym.atDay(1);
-        LocalDate end = ym.atEndOfMonth();
+    public List<PersonSpendDto> getPersonSpend(String periodStr) {
+        LocalDate[] range = parsePeriod(periodStr);
+        List<Purchase> purchases = purchaseRepository.findWithFilters(range[0], range[1], null, null);
 
-        List<Purchase> purchases = purchaseRepository.findWithFilters(start, end, null, null, null);
+        Map<Profile, BigDecimal> spendMap = purchases.stream()
+                .collect(Collectors.groupingBy(
+                        Purchase::getProfile,
+                        Collectors.reducing(BigDecimal.ZERO, Purchase::getTotalAmount, BigDecimal::add)
+                ));
+
+        return spendMap.entrySet().stream()
+                .map(e -> new PersonSpendDto(
+                        e.getKey().getId(),
+                        e.getKey().getName(),
+                        e.getValue()
+                ))
+                .sorted(Comparator.comparing(PersonSpendDto::totalAmount).reversed())
+                .collect(Collectors.toList());
+    }
+
+    public List<PriceChangeDto> getPriceChanges(String periodStr) {
+        LocalDate[] range = parsePeriod(periodStr);
+        List<Purchase> purchasesInPeriod = purchaseRepository.findWithFilters(range[0], range[1], null, null);
+
+        // Find unique items bought in this period
+        Set<Long> itemIds = purchasesInPeriod.stream()
+                .map(p -> p.getItem().getId())
+                .collect(Collectors.toSet());
+
+        List<PriceChangeDto> priceChanges = new ArrayList<>();
+
+        for (Long itemId : itemIds) {
+            PriceHistoryDto history = getPriceHistory(itemId);
+            if (history.history().size() > 1 && history.deltaRate().compareTo(BigDecimal.ZERO) != 0) {
+                // Ensure the latest purchase actually happened in our period
+                LocalDate lastPurchaseDate = history.history().get(history.history().size() - 1).date();
+                if (!lastPurchaseDate.isBefore(range[0]) && !lastPurchaseDate.isAfter(range[1])) {
+                    Item item = itemService.getItemById(itemId);
+                    LocalDate prevDate = history.history().get(history.history().size() - 2).date();
+                    priceChanges.add(new PriceChangeDto(
+                            itemId,
+                            item.getName(),
+                            history.latestRate(),
+                            history.previousRate(),
+                            history.deltaRate(),
+                            history.deltaPercent(),
+                            lastPurchaseDate,
+                            prevDate
+                    ));
+                }
+            }
+        }
+
+        // Sort by biggest absolute percentage change
+        priceChanges.sort((a, b) -> b.deltaPercent().abs().compareTo(a.deltaPercent().abs()));
+        return priceChanges;
+    }
+
+    public CostPerHeadDto getCostPerHead(String periodStr) {
+        LocalDate[] range = parsePeriod(periodStr);
+        List<Purchase> purchases = purchaseRepository.findWithFilters(range[0], range[1], null, null);
         BigDecimal total = purchases.stream()
                 .map(Purchase::getTotalAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -134,16 +185,21 @@ public class AnalyticsService {
     }
 
     public DashboardSummaryDto getDashboardSummary(String monthStr) {
-        YearMonth currentYm = parseYearMonth(monthStr);
+        YearMonth currentYm;
+        try {
+            currentYm = YearMonth.parse(monthStr);
+        } catch (Exception e) {
+            currentYm = YearMonth.now();
+        }
 
         // 1. This month totals and per-head split
         CostPerHeadDto costPerHead = getCostPerHead(currentYm.toString());
 
-        // 2. Category spending breakdown
-        List<CategorySpendDto> categorySpend = getCategorySpend(currentYm.toString());
+        // 2. Item spending breakdown
+        List<ItemSpendDto> itemSpend = getItemSpend(currentYm.toString());
 
         // 3. Recent 5 purchases overall
-        List<Purchase> recentPurchases = purchaseRepository.findWithFilters(null, null, null, null, null)
+        List<Purchase> recentPurchases = purchaseRepository.findWithFilters(null, null, null, null)
                 .stream()
                 .limit(5)
                 .collect(Collectors.toList());
@@ -157,7 +213,7 @@ public class AnalyticsService {
             LocalDate start = targetYm.atDay(1);
             LocalDate end = targetYm.atEndOfMonth();
 
-            List<Purchase> ymPurchases = purchaseRepository.findWithFilters(start, end, null, null, null);
+            List<Purchase> ymPurchases = purchaseRepository.findWithFilters(start, end, null, null);
             BigDecimal total = ymPurchases.stream()
                     .map(Purchase::getTotalAmount)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -178,20 +234,32 @@ public class AnalyticsService {
         return new DashboardSummaryDto(
                 costPerHead.totalAmount(),
                 costPerHead,
-                categorySpend,
+                itemSpend,
                 recentPurchases,
                 trend
         );
     }
 
-    private YearMonth parseYearMonth(String monthStr) {
-        if (monthStr == null || monthStr.isBlank()) {
-            return YearMonth.now();
+    private LocalDate[] parsePeriod(String periodStr) {
+        if (periodStr == null || periodStr.isBlank()) {
+            YearMonth ym = YearMonth.now();
+            return new LocalDate[]{ym.atDay(1), ym.atEndOfMonth()};
+        }
+        if (periodStr.length() == 4) { // YYYY
+            try {
+                int year = Integer.parseInt(periodStr);
+                return new LocalDate[]{LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31)};
+            } catch (Exception e) {
+                YearMonth ym = YearMonth.now();
+                return new LocalDate[]{ym.atDay(1), ym.atEndOfMonth()};
+            }
         }
         try {
-            return YearMonth.parse(monthStr);
+            YearMonth ym = YearMonth.parse(periodStr);
+            return new LocalDate[]{ym.atDay(1), ym.atEndOfMonth()};
         } catch (Exception e) {
-            return YearMonth.now();
+            YearMonth ym = YearMonth.now();
+            return new LocalDate[]{ym.atDay(1), ym.atEndOfMonth()};
         }
     }
 }

@@ -6,9 +6,6 @@ import java.time.LocalDate;
 public record UpdatePurchaseRequest(
     Long itemId,
     String itemName,
-    Long categoryId,
-    String categoryName,
-    String categoryColor,
     String unit,
     BigDecimal quantity,
     BigDecimal rate,

@@ -25,13 +25,12 @@ public class ItemController {
 
     public record CreateItemRequest(
         @NotBlank String name,
-        @NotNull Long categoryId,
         @NotBlank String unit
     ) {}
 
     @PostMapping
     public ResponseEntity<Item> createItem(@Valid @RequestBody CreateItemRequest request) {
-        Item item = itemService.createItem(request.name(), request.categoryId(), request.unit());
+        Item item = itemService.createItem(request.name(), request.unit());
         return ResponseEntity.ok(item);
     }
 }

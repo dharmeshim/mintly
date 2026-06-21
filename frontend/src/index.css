@@ -87,18 +87,24 @@ button, input, select, textarea {
   background: var(--text-muted);
 }
 
-/* App Wrapper for mobile bottom navigation */
+/* App Wrapper for responsive layout */
 .app-container {
-  max-width: 480px;
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
   background-color: var(--bg-app);
-  border-left: 1px solid var(--border-color);
-  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
   position: relative;
-  padding-bottom: 84px; /* Space for bottom nav */
+  padding-bottom: 84px; /* Space for bottom nav on mobile */
+}
+
+@media (min-width: 768px) {
+  .app-container {
+    flex-direction: row;
+    padding-bottom: 0;
+  }
 }
 
 /* Typography styles */
@@ -210,14 +216,12 @@ button, input, select, textarea {
   transform: scale(1.02);
 }
 
-/* Bottom Navigation Bar */
+/* Navigation Bar (Bottom on mobile, Sidebar on desktop) */
 .bottom-nav {
   position: fixed;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
   width: 100%;
-  max-width: 480px;
   height: 72px;
   background: rgba(9, 9, 11, 0.85);
   backdrop-filter: blur(20px);
@@ -228,6 +232,21 @@ button, input, select, textarea {
   align-items: center;
   z-index: 100;
   padding: 0 10px;
+}
+
+@media (min-width: 768px) {
+  .bottom-nav {
+    position: static;
+    width: 250px;
+    height: 100vh;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    border-top: none;
+    border-right: 1px solid var(--border-color);
+    padding: 2rem 1rem;
+    gap: 1rem;
+  }
 }
 
 .bottom-nav-item {
@@ -242,10 +261,22 @@ button, input, select, textarea {
   cursor: pointer;
   border: none;
   background: none;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+}
+
+@media (min-width: 768px) {
+  .bottom-nav-item {
+    flex-direction: row;
+    font-size: 1rem;
+    gap: 1rem;
+    padding: 1rem;
+  }
 }
 
 .bottom-nav-item:hover, .bottom-nav-item.active {
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .bottom-nav-item.active svg {
@@ -253,11 +284,23 @@ button, input, select, textarea {
   transform: translateY(-2px);
 }
 
+@media (min-width: 768px) {
+  .bottom-nav-item.active svg {
+    transform: translateX(2px);
+  }
+}
+
 .bottom-nav-item svg {
   width: 24px;
   height: 24px;
   margin-bottom: 4px;
   transition: var(--transition-normal);
+}
+
+@media (min-width: 768px) {
+  .bottom-nav-item svg {
+    margin-bottom: 0;
+  }
 }
 
 /* PIN Keyboard Styles */
@@ -319,21 +362,24 @@ button, input, select, textarea {
 .fab-container {
   position: fixed;
   bottom: 88px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 480px;
+  right: 1.5rem;
   display: flex;
   justify-content: flex-end;
-  padding-right: 1.5rem;
   pointer-events: none;
   z-index: 99;
 }
 
+@media (min-width: 768px) {
+  .fab-container {
+    bottom: 2rem;
+    right: 2rem;
+  }
+}
+
 .fab {
   pointer-events: auto;
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   border-radius: var(--radius-full);
   background-color: var(--color-primary);
   color: #000;

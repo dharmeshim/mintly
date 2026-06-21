@@ -8,9 +8,6 @@ import java.time.LocalDate;
 public record CreatePurchaseRequest(
     Long itemId,
     String itemName,
-    Long categoryId,
-    String categoryName,
-    String categoryColor,
     String unit,
     @NotNull @Positive BigDecimal quantity,
     @NotNull @Positive BigDecimal rate,

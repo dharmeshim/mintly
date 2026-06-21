@@ -7,7 +7,7 @@ import java.util.List;
 public record DashboardSummaryDto(
     BigDecimal thisMonthTotal,
     CostPerHeadDto costPerHead,
-    List<CategorySpendDto> categorySpend,
+    List<ItemSpendDto> itemSpend,
     List<Purchase> recentPurchases,
     List<MonthlyTrendDto> monthlyTrend
 ) {

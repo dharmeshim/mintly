@@ -18,14 +18,12 @@ public interface PurchaseRepository extends JpaRepository<Purchase, Long> {
     @Query("SELECT p FROM Purchase p WHERE " +
            "(:startDate IS NULL OR p.purchaseDate >= :startDate) AND " +
            "(:endDate IS NULL OR p.purchaseDate <= :endDate) AND " +
-           "(:categoryId IS NULL OR p.item.category.id = :categoryId) AND " +
            "(:itemId IS NULL OR p.item.id = :itemId) AND " +
            "(:profileId IS NULL OR p.profile.id = :profileId) " +
            "ORDER BY p.purchaseDate DESC, p.id DESC")
     List<Purchase> findWithFilters(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
-            @Param("categoryId") Long categoryId,
             @Param("itemId") Long itemId,
             @Param("profileId") Long profileId
     );

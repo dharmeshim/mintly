@@ -1,7 +1,5 @@
 package com.familyexpense.tracker.purchase;
 
-import com.familyexpense.tracker.category.Category;
-import com.familyexpense.tracker.category.CategoryService;
 import com.familyexpense.tracker.item.Item;
 import com.familyexpense.tracker.item.ItemService;
 import com.familyexpense.tracker.profile.Profile;
@@ -19,28 +17,24 @@ public class PurchaseService {
     private final PurchaseRepository purchaseRepository;
     private final ProfileService profileService;
     private final ItemService itemService;
-    private final CategoryService categoryService;
 
     public PurchaseService(
             PurchaseRepository purchaseRepository,
             ProfileService profileService,
-            ItemService itemService,
-            CategoryService categoryService
+            ItemService itemService
     ) {
         this.purchaseRepository = purchaseRepository;
         this.profileService = profileService;
         this.itemService = itemService;
-        this.categoryService = categoryService;
     }
 
     public List<Purchase> getPurchases(
             LocalDate startDate,
             LocalDate endDate,
-            Long categoryId,
             Long itemId,
             Long profileId
     ) {
-        return purchaseRepository.findWithFilters(startDate, endDate, categoryId, itemId, profileId);
+        return purchaseRepository.findWithFilters(startDate, endDate, itemId, profileId);
     }
 
     public Purchase getPurchaseById(Long id) {
@@ -48,9 +42,17 @@ public class PurchaseService {
                 .orElseThrow(() -> new IllegalArgumentException("Purchase not found"));
     }
 
+    public Purchase getLastPurchaseByItemId(Long itemId) {
+        List<Purchase> purchases = purchaseRepository.findByItemIdOrderByPurchaseDateDesc(itemId);
+        if (purchases.isEmpty()) {
+            return null;
+        }
+        return purchases.get(0);
+    }
+
     public Purchase createPurchase(Long profileId, CreatePurchaseRequest req) {
         Profile profile = profileService.getProfileById(profileId);
-        Item item = resolveItem(req.itemId(), req.itemName(), req.categoryId(), req.categoryName(), req.categoryColor(), req.unit());
+        Item item = resolveItem(req.itemId(), req.itemName(), req.unit());
 
         Purchase purchase = new Purchase(
                 item,
@@ -88,7 +90,7 @@ public class PurchaseService {
         }
 
         if (req.itemId() != null || req.itemName() != null) {
-            Item item = resolveItem(req.itemId(), req.itemName(), req.categoryId(), req.categoryName(), req.categoryColor(), req.unit());
+            Item item = resolveItem(req.itemId(), req.itemName(), req.unit());
             purchase.setItem(item);
         }
 
@@ -100,7 +102,7 @@ public class PurchaseService {
         purchaseRepository.delete(purchase);
     }
 
-    private Item resolveItem(Long itemId, String itemName, Long categoryId, String categoryName, String categoryColor, String unit) {
+    private Item resolveItem(Long itemId, String itemName, String unit) {
         if (itemId != null) {
             return itemService.getItemById(itemId);
         }
@@ -109,16 +111,7 @@ public class PurchaseService {
             throw new IllegalArgumentException("Item ID or Item Name is required");
         }
 
-        Category category;
-        if (categoryId != null) {
-            category = categoryService.getCategoryById(categoryId);
-        } else if (categoryName != null && !categoryName.isBlank()) {
-            category = categoryService.getOrCreateCategory(categoryName, categoryColor != null ? categoryColor : "#808080");
-        } else {
-            throw new IllegalArgumentException("Category reference (ID or name) is required for a new item");
-        }
-
         String itemUnit = (unit != null && !unit.isBlank()) ? unit : "piece";
-        return itemService.getOrCreateItem(itemName, category.getId(), itemUnit);
+        return itemService.getOrCreateItem(itemName, itemUnit);
     }
 }
